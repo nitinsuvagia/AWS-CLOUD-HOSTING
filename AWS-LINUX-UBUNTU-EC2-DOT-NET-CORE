@@ -1,1 +1,126 @@
 How To Install Nginx on Ubuntu 20.04
+
+Step 1 – Installing Nginx
+
+sudo apt update
+sudo apt install nginx
+
+
+Step 2 – Adjusting the Firewall
+
+List the application configurations that ufw knows how to work with by typing:
+
+    sudo ufw app list
+
+You should get a listing of the application profiles:
+
+Output
+Available applications:
+  Nginx Full
+  Nginx HTTP
+  Nginx HTTPS
+  OpenSSH
+
+
+You can enable this by typing:
+
+    sudo ufw allow 'Nginx HTTP'
+
+You can verify the change by typing:
+
+    sudo ufw status
+
+
+Step 3 – Checking your Web Server
+
+systemctl status nginx
+systemctl start nginx
+systemctl reload nginx
+
+
+Step 4 – Setting Up Server Blocks (Recommended)
+
+Create the directory for your_domain as follows, using the -p flag to create any necessary parent directories:
+
+    sudo mkdir -p /var/www/your_domain/html
+
+Next, assign ownership of the directory with the $USER environment variable:
+
+    sudo chown -R $USER:$USER /var/www/your_domain/html
+
+    sudo chmod -R 755 /var/www/your_domain
+
+ 
+
+Next, create a sample index.html page using nano or your favorite editor:
+
+    nano /var/www/your_domain/html/index.html
+
+ 
+
+Inside, add the following sample HTML:      /var/www/your_domain/html/index.html
+
+<html>
+    <head>
+        <title>Welcome to your_domain!</title>
+    </head>
+    <body>
+        <h1>Success!  The your_domain server block is working!</h1>
+    </body>
+</html>
+
+In order for Nginx to serve this content, it’s necessary to create a server block with the correct directives.
+
+sudo nano /etc/nginx/sites-available/your_domain
+
+ 
+Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
+/etc/nginx/sites-available/your_domain
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/your_domain/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name your_domain www.your_domain;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+Next, let’s enable the file by creating a link from it to the sites-enabled directory, which Nginx reads from during startup:
+
+    sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
+
+
+To avoid a possible hash bucket memory problem that can arise from adding additional server names, it is necessary to adjust a single value in the /etc/nginx/nginx.conf file. Open the file:
+
+    sudo nano /etc/nginx/nginx.conf
+
+ 
+Find the server_names_hash_bucket_size directive and remove the # symbol
+
+...
+http {
+    ...
+    server_names_hash_bucket_size 64;
+    ...
+}
+...
+
+
+
+Next, test to make sure that there are no syntax errors in any of your Nginx files:
+
+    sudo nginx -t
+
+ 
+If there aren’t any problems, restart Nginx to enable your changes:
+
+    sudo systemctl restart nginx
+
+ 
+Nginx should now be serving your domain name. You can test this by navigating to http://your_domain
