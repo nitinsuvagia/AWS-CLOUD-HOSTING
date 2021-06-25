@@ -1,0 +1,127 @@
+Update your Libraries
+------------------------------
+$ sudo apt-get update
+
+
+Install Apache2
+------------------------------------------
+$ sudo apt-get install apache2
+
+Now copy the IPv4 Public IP Address of your EC2 instance and hit on the browser.
+
+
+Install PHP and useful packages
+------------------------------------------
+$ sudo apt-get install php
+$ php --version
+$ sudo apt-get install php7.4-cli php7.4-common php7.4-curl php7.4-gd php7.4-json php7.4-mbstring php7.4-intl php7.4-mysql php7.4-xml php7.4-zip
+
+
+Apache will first look for a file named index.html. If you want to change 
+Apache to serve php files rather than others, move index.php to first position 
+in the dir.conf file as shown below.
+------------------------------------------------------------------------------------
+$ sudo nano /etc/apache2/mods-enabled/dir.conf
+
+
+Install MySQL Server
+------------------------------------------------------------------------------------
+sudo apt-get install mysql-server
+
+Above this command will install mysql server but this will not prompt anything to configure mysql .
+
+
+Configuring MySQL
+------------------------------------------------------------------------------------
+$ sudo mysql_secure_installation
+
+
+Now Let's login into MySQL to manage User & Database
+------------------------------------------------------------------------------------
+$ sudo mysql
+
+
+To configure the root account to authenticate with a password, run the following ALTER USER command.
+----------------------------------------------------------------------------------------------------------
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'yourpassword';
+
+Then, run FLUSH PRIVILEGES which tells the server to reload the grant tables and put your new changes into effect:
+
+mysql> FLUSH PRIVILEGES;
+
+
+Install Composer
+------------------------------------------------------------------------------------------------------------------------------------
+$ php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+$ php -r "if (hash_file('sha384', 'composer-setup.php') === 'e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+$ php composer-setup.php
+$ php composer-setup.php --install-dir=bin --filename=composer
+$ php -r "unlink('composer-setup.php');"
+$ composer --version
+
+
+Install Git (If you are looking for any Git repo to copy here in your executable folder)
+----------------------------------------------------------------------------------------
+$ sudo apt-get install git-core
+
+
+Clone Your Repository
+Change to /var/www/html directory and clone your Laravel Project there using following commands.
+---------------------------------------------------------------------------------------------------------
+$ cd /var/www/html
+$ sudo git clone https://github.com/username/reponame.git
+$ cd reponame
+
+
+
+Adding .env File to your Laravel project
+------------------------------------------------------------
+$ sudo vi .env
+
+
+Installing Libraries In Project
+------------------------------------------------------------
+$ sudo composer install
+
+
+Read Write Permissions for your Project
+------------------------------------------------------------
+sudo chmod 777 -R storage/
+sudo chmod 777 -R bootstrap/
+
+
+Apache Configuration
+------------------------------------------------------------------------------------------------------------------------
+By Default Apache open /var/www/html/index.html 
+Now we have to open our Laravel project when we go to the public IP of the EC2.
+Go to /etc/apache2/sites-available/000-default.conf and change the DocumentRoot as shown below.
+
+
+$ sudo vi /etc/apache2/sites-available/000-default.conf
+
+
+Start your Apache
+------------------------------------------------------------
+$ sudo systemctl start apache2
+
+
+Status your Apache
+------------------------------------------------------------
+$ sudo systemctl status apache2
+
+
+Stop your Apache
+------------------------------------------------------------
+$ sudo systemctl status apache2
+
+
+Restart your Apache
+------------------------------------------------------------
+$ sudo systemctl restart apache2
+
+
+
+************************************ THE END ************************************
+
+
+
