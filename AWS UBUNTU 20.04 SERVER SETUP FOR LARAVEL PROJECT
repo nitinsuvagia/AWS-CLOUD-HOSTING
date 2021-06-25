@@ -1,3 +1,8 @@
+How to Install AWS Ubuntu 20.04 Server for Laravel Project.
+Ref. https://medium.com/nerd-for-tech/how-to-deploy-laravel-project-on-ec2-aws-6d004a57bb1f
+********************************************************************************************************
+
+
 Update your Libraries
 ------------------------------
 $ sudo apt-get update
