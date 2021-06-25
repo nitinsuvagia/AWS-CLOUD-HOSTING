@@ -1,21 +1,62 @@
 How To Install Nginx on Ubuntu 20.04
-https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
+Ref. https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
+
+
+************************************************************************************************************
+                        LETS PREPARE MACHINE FOR DOTNET CORE COMPITABLE 
+************************************************************************************************************
+
+
+Step 1 - Update the machine for DotNet Core to install
+It's always good idea to update the instance to latest packages with following commands:
+************************************************************************************************************
+$ sudo apt-get update
+$ sudo apt-get upgrade
+$ sudo apt-get dist-upgrade
+
+
+Step 2 - Find and get Package for DotNet Core
+************************************************************************************************************
+$ wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+$ sudo dpkg -i packages-microsoft-prod.deb
+
+
+
+
+Step 3 - Now install dotnet core with the following commands.
+************************************************************************************************************
+$ sudo add-apt-repository universe
+$ sudo apt-get install apt-transport-https
+$ sudo apt-get update
+$ sudo apt-get install dotnet-sdk-2.1.2
+$ sudo apt-get install dotnet-runtime-2.1.2
+$ dotnet --version # to check dotnet core installed correctly
+
+
+
+************************************************************************************************************
+                      INSTALLING NGINX SERVER FOR RUN DOTNETCORE APP ON SERVER
+************************************************************************************************************
+
 
 
 Step 1 – Installing Nginx
-
+************************************************************************************************************
 sudo apt update
 sudo apt install nginx
 
 
-Step 2 – Adjusting the Firewall
 
+Step 2 – Adjusting the Firewall
+************************************************************************************************************
 List the application configurations that ufw knows how to work with by typing:
 
-    sudo ufw app list
+sudo ufw app list
+
+
 
 You should get a listing of the application profiles:
-
+******************************************************
 Output
 Available applications:
   Nginx Full
@@ -24,44 +65,55 @@ Available applications:
   OpenSSH
 
 
-You can enable this by typing:
 
-    sudo ufw allow 'Nginx HTTP'
+You can enable this by typing:
+********************************
+sudo ufw allow 'Nginx HTTP'
 
 You can verify the change by typing:
+**************************************
+sudo ufw status
 
-    sudo ufw status
+
 
 
 Step 3 – Checking your Web Server
+************************************************************************************************************
 
-systemctl status nginx
-systemctl start nginx
-systemctl reload nginx
+sudo systemctl status nginx
+sudo systemctl start nginx
+sudo systemctl reload nginx
 
 
 Step 4 – Setting Up Server Blocks (Recommended)
+************************************************************************************************************
+Create the directory for your_domain as follows, using the -p flag to create any necessary 
+parent directories:
 
-Create the directory for your_domain as follows, using the -p flag to create any necessary parent directories:
+sudo mkdir -p /var/www/your_domain/html
 
-    sudo mkdir -p /var/www/your_domain/html
+
 
 Next, assign ownership of the directory with the $USER environment variable:
-
-    sudo chown -R $USER:$USER /var/www/your_domain/html
-
-    sudo chmod -R 755 /var/www/your_domain
+******************************************************************************
+sudo chown -R $USER:$USER /var/www/your_domain/html
+sudo chmod -R 755 /var/www/your_domain
 
  
 
 Next, create a sample index.html page using nano or your favorite editor:
-
-    nano /var/www/your_domain/html/index.html
+**************************************************************************
+nano /var/www/your_domain/html/index.html
 
  
 
-Inside, add the following sample HTML:      /var/www/your_domain/html/index.html
+Add the following sample HTML:      
+****************************************
+cd /var/www/your_domain/html/index.html
 
+
+Sample
+********
 <html>
     <head>
         <title>Welcome to your_domain!</title>
@@ -71,14 +123,20 @@ Inside, add the following sample HTML:      /var/www/your_domain/html/index.html
     </body>
 </html>
 
-In order for Nginx to serve this content, it’s necessary to create a server block with the correct directives.
 
+In order for Nginx to serve this content, it’s necessary to create a server 
+block with the correct directives.
+******************************************************************************
 sudo nano /etc/nginx/sites-available/your_domain
 
  
-Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
-/etc/nginx/sites-available/your_domain
+Paste in the following configuration block, which is similar to the default, 
+but updated for our new directory and domain name:
+*******************************************************************************
+cd /etc/nginx/sites-available/your_domain
 
+Sample
+*********
 server {
         listen 80;
         listen [::]:80;
@@ -90,21 +148,31 @@ server {
 
         location / {
                 try_files $uri $uri/ =404;
+                proxy_pass http://localhost:5000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection keep-alive;
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
         }
 }
 
-Next, let’s enable the file by creating a link from it to the sites-enabled directory, which Nginx reads from during startup:
+Next, let’s enable the file by creating a link from it to the sites-enabled directory, 
+which Nginx reads from during startup:
+*********************************************************************************************
+sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
 
-    sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
 
-
-To avoid a possible hash bucket memory problem that can arise from adding additional server names, it is necessary to adjust a single value in the /etc/nginx/nginx.conf file. Open the file:
-
-    sudo nano /etc/nginx/nginx.conf
+To avoid a possible hash bucket memory problem that can arise from adding additional server names, 
+it is necessary to adjust a single value in the /etc/nginx/nginx.conf file. Open the file:
+****************************************************************************************************
+sudo nano /etc/nginx/nginx.conf
 
  
 Find the server_names_hash_bucket_size directive and remove the # symbol
-
+****************************************************************************
 ...
 http {
     ...
@@ -116,13 +184,81 @@ http {
 
 
 Next, test to make sure that there are no syntax errors in any of your Nginx files:
-
-    sudo nginx -t
+****************************************************************************************
+sudo nginx -t
 
  
 If there aren’t any problems, restart Nginx to enable your changes:
+**********************************************************************
 
-    sudo systemctl restart nginx
 
- 
+sudo systemctl start nginx 
+
+sudo systemctl stop nginx 
+
+sudo systemctl reload nginx 
+
+sudo systemctl status nginx 
+
+  
 Nginx should now be serving your domain name. You can test this by navigating to http://your_domain
+
+
+************************************************************************************************************
+                      CREATE DOTNET CORE PROJECT, BUILD, RUN & DEPLOY IT
+************************************************************************************************************
+
+
+Step 1 - Create Dotnet core Application
+***************************************************
+dotnet new first-test-project
+dotnet new web first-test-web-project
+
+Now navigate to solution folder.
+
+Step 2 - Build Dotnetcore Application
+***************************************************
+dotnet build
+
+
+Step 3 - Run Dotnetcore Application
+***************************************************
+dotnet first-test-web-project.dll
+
+Now you can navigate to Public IP or any pointed domain to run this application
+
+
+Step 4 - Running your application as service
+***************************************************
+$ sudo nano /etc/systemd/system/web-api-core.service
+
+Sample
+--------
+[Unit] 
+Description=DotNet Core application on Ubuntu 
+
+[Service] 
+WorkingDirectory=/var/www/api 
+ExecStart=/usr/bin/dotnet /var/www/api /WebApiCore.dll 
+Restart=always 
+RestartSec=10 # Restart service after 10 seconds if dotnet service crashes 
+SyslogIdentifier=offershare-web-app
+Environment=ASPNETCORE_ENVIRONMENT=Production 
+
+[Install] 
+WantedBy=multi-user.target
+
+
+Step 4 - Then, we need to enable the service and run it.
+***********************************************************
+
+$ sudo systemctl enable web-api-core.service
+$ sudo systemctl start web-api-core.service
+$ sudo systemctl status web-api-core.service
+
+
+
+************************************* THE END *************************************
+
+
+
